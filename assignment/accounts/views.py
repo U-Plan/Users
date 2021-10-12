@@ -2,6 +2,7 @@ from .serializers import UserCreateSerializer, UserSerializer
 from .models import SmsAuthentication
 from rest_framework import generics, status
 from rest_framework.response import Response
+from django.core.validators import RegexValidator, ValidationError
 
 
 class SmsAuth(generics.GenericAPIView):
@@ -30,6 +31,22 @@ class UserCreate(generics.CreateAPIView):
     serializer_class = UserCreateSerializer
 
     def post(self, request):
+        password_validator = RegexValidator(
+            regex="^[A-Za-z0-9!@#$%^&+=]{8,100}$")
+        try:
+            password_validator(request.data['password'])
+            auth_key = request.data['auth']
+            check_phone = request.data['phone']
+        except ValidationError:
+            return Response({'message': 'INVALID_PASSWORD'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        except KeyError:
+            return Response({'message': 'INVALID_VALUE'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+        result = SmsAuthentication.check_auth_key(check_phone, auth_key)
+
+        if not result:
+            return Response({'message': 'INVALID_AUTH'}, status=status.HTTP_401_UNAUTHORIZED)
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
