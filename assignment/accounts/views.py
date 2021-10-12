@@ -61,7 +61,7 @@ class UserCreate(generics.CreateAPIView):
 class UserLogin(generics.CreateAPIView):
     serializer_class = UserLoginSerializer
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data
@@ -82,10 +82,18 @@ class UserInfo(generics.GenericAPIView):
             regex="^[A-Za-z0-9!@#$%^&+=]{8,100}$")
         try:
             password_validator(request.data['password'])
+            auth_key = request.data['auth']
+            check_phone = request.data['phone']
         except ValidationError:
             return Response({'message': 'INVALID_PASSWORD'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
         except KeyError:
             return Response({'message': 'INVALID_VALUE'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+        result = SmsAuthentication.check_auth_key(check_phone, auth_key)
+
+        if not result:
+            return Response({'message': 'INVALID_AUTH'}, status=status.HTTP_401_UNAUTHORIZED)
+
         user = request.user
         user.set_password(request.data['password'])
         user.save()
