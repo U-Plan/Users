@@ -1,4 +1,4 @@
-from .serializers import UserCreateSerializer, UserSerializer
+from .serializers import UserCreateSerializer, UserSerializer, UserLoginSerializer
 from .models import SmsAuthentication
 from rest_framework import generics, status
 from rest_framework.response import Response
@@ -55,3 +55,16 @@ class UserCreate(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         return Response({'id': user.id}, status=status.HTTP_201_CREATED)
+
+
+@permission_classes([AllowAny])
+class UserLogin(generics.CreateAPIView):
+    serializer_class = UserLoginSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data
+        if not user:
+            return Response({'message': 'INVALID_VALUE'}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response({'token': user['token']}, status=status.HTTP_200_OK)
