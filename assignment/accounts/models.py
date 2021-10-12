@@ -28,6 +28,16 @@ class UserManager(BaseUserManager):
         return user
 
 
+class EmailValidator(RegexValidator):
+    regex = r'^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})$'
+    message = 'Invalid Email'
+
+
+class PhoneValidator(RegexValidator):
+    regex = r'^[0-9]{9,14}$'
+    message = 'Invalid Phone'
+
+
 class User(AbstractBaseUser):
 
     id = models.AutoField(primary_key=True)
@@ -48,16 +58,6 @@ class User(AbstractBaseUser):
 
     def __str__(self):
         return self.nickname
-
-
-class EmailValidator(RegexValidator):
-    regex = r'^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})$'
-    message = 'Invalid Email'
-
-
-class PhoneValidator(RegexValidator):
-    regex = r'^[0-9]{9,14}$'
-    message = 'Invalid Phone'
 
 
 class SmsAuthentication(TimeStampedModel):
