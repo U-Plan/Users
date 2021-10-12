@@ -1,5 +1,5 @@
 from .serializers import UserCreateSerializer, UserSerializer, UserLoginSerializer
-from .models import SmsAuthentication
+from .models import SmsAuthentication, User
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.decorators import permission_classes
@@ -100,7 +100,11 @@ class PasswordModify(generics.UpdateAPIView):
         if not result:
             return Response({'message': 'INVALID_AUTH'}, status=status.HTTP_401_UNAUTHORIZED)
 
-        user = request.user
+        try:
+            user = User.objects.get(phone=check_phone)
+        except User.DoesNotExist:
+            return Response({'message': 'INVALID_USER'}, status=status.HTTP_401_UNAUTHORIZED)
+
         user.set_password(request.data['password'])
         user.save()
         return Response({'message': 'SUCCESS'}, status=status.HTTP_200_OK)
