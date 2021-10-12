@@ -18,10 +18,13 @@ class SmsAuth(generics.GenericAPIView):
             SmsAuthentication.objects.update_or_create(phone=phone)
         return Response({'message': 'SUCCESS'}, status=status.HTTP_200_OK)
 
-    def get(self, request):
+
+@permission_classes([AllowAny])
+class SmsCertificate(generics.GenericAPIView):
+    def post(self, request):
         try:
-            check_phone = request.query_params['phone']
-            check_number = request.query_params['auth']
+            check_phone = request.data['phone']
+            check_number = request.data['auth']
         except KeyError:
             return Response({'message': 'INVALID_VALUE'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
         else:
