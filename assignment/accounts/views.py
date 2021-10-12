@@ -2,9 +2,12 @@ from .serializers import UserCreateSerializer, UserSerializer
 from .models import SmsAuthentication
 from rest_framework import generics, status
 from rest_framework.response import Response
+from rest_framework.decorators import permission_classes
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.core.validators import RegexValidator, ValidationError
 
 
+@permission_classes([AllowAny])
 class SmsAuth(generics.GenericAPIView):
     def post(self, request):
         try:
@@ -27,6 +30,7 @@ class SmsAuth(generics.GenericAPIView):
             return Response({'auth_key': auth_key}, status=status.HTTP_200_OK)
 
 
+@permission_classes([AllowAny])
 class UserCreate(generics.CreateAPIView):
     serializer_class = UserCreateSerializer
 

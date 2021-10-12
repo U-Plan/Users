@@ -22,3 +22,29 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['nickname', 'email', 'name', 'phone']
+
+
+class UserLoginSerializer(serializers.Serializer):
+    id = serializers.CharField()
+    password = serializers.CharField()
+
+    def validate(self, data):
+        id = data.get("id")
+        password = data.get("password")
+        user = authenticate(username=id, password=password)
+
+        if user and user.is_active:
+            try:
+                payload = JWT_PAYLOAD_HANDLER(user)
+                jwt_token = JWT_ENCODE_HANDLER(payload)
+                update_last_login(None, user)
+            except User.DoesNotExist:
+                raise serializers.ValidationError(
+                    'INVALID_ID_OR_PASSWORD'
+                )
+            return {
+                'id': user.id,
+                'token': jwt_token
+            }
+        raise serializers.ValidationError(
+            'INVALID_ID_OR_PASSWORD')
