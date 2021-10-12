@@ -1,5 +1,10 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from django.core.validators import RegexValidator
+from random import randint
+import datetime
+from django.utils import timezone
+from model_utils.models import TimeStampedModel
 
 
 class UserManager(BaseUserManager):
@@ -53,3 +58,45 @@ class EmailValidator(RegexValidator):
 class PhoneValidator(RegexValidator):
     regex = r'^[0-9]{9,14}$'
     message = 'Invalid Phone'
+
+
+class SmsAuthentication(TimeStampedModel):
+    phone = models.CharField(
+        max_length=11, primary_key=True, validators=[PhoneValidator()])
+    auth_number = models.CharField(max_length=4)
+    auth_key = models.CharField(max_length=4)
+
+    class Meta:
+        db_table = 'sms_auth'
+
+    def save(self, *args, **kwargs):
+        self.auth_number = '0000'  # test auth number
+        self.auth_key = randint(1000, 9999)  # anything hash id
+        # need send sms function
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def check_sms_auth(cls, check_phone, check_number):
+        time_limit = timezone.now() - datetime.timedelta(minutes=3)
+        try:
+            result = cls.objects.get(
+                phone=check_phone,
+                auth_number=check_number,
+                modified__gte=time_limit
+            )
+            if result:
+                return result.auth_key
+        except cls.DoesNotExist:
+            return False
+
+    @classmethod
+    def check_auth_key(cls, check_phone, check_key):
+        time_limit = timezone.now() - datetime.timedelta(minutes=10)
+        result = cls.objects.filter(
+            phone=check_phone,
+            auth_key=check_key,
+            modified__gte=time_limit
+        )
+        if result:
+            return True
+        return False
