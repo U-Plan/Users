@@ -80,6 +80,9 @@ class UserInfo(generics.GenericAPIView):
     def get(self, request):
         return Response({'info': UserSerializer(request.user, context=self.get_serializer_context()).data}, status=status.HTTP_200_OK)
 
+
+@permission_classes([AllowAny])
+class PasswordModify(generics.UpdateAPIView()):
     def patch(self, request):
         password_validator = RegexValidator(
             regex="^[A-Za-z0-9!@#$%^&+=]{8,100}$")
