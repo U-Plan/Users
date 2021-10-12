@@ -30,7 +30,7 @@ class SmsCertificate(generics.GenericAPIView):
 
         auth_key = SmsAuthentication.check_sms_auth(check_phone, check_number)
 
-        if not result:
+        if not auth_key:
             return Response({'message': 'INVALID_AUTH'}, status=status.HTTP_401_UNAUTHORIZED)
 
         return Response({'auth_key': auth_key}, status=status.HTTP_200_OK)
