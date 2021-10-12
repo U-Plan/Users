@@ -27,10 +27,13 @@ class SmsCertificate(generics.GenericAPIView):
             check_number = request.data['auth']
         except KeyError:
             return Response({'message': 'INVALID_VALUE'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
-        else:
-            auth_key = SmsAuthentication.check_sms_auth(
-                check_phone, check_number)
-            return Response({'auth_key': auth_key}, status=status.HTTP_200_OK)
+
+        auth_key = SmsAuthentication.check_sms_auth(check_phone, check_number)
+
+        if not result:
+            return Response({'message': 'INVALID_AUTH'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        return Response({'auth_key': auth_key}, status=status.HTTP_200_OK)
 
 
 @permission_classes([AllowAny])
