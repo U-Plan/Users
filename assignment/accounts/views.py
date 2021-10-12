@@ -82,7 +82,7 @@ class UserInfo(generics.GenericAPIView):
 
 
 @permission_classes([AllowAny])
-class PasswordModify(generics.UpdateAPIView()):
+class PasswordModify(generics.UpdateAPIView):
     def patch(self, request):
         password_validator = RegexValidator(
             regex="^[A-Za-z0-9!@#$%^&+=]{8,100}$")
