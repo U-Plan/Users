@@ -68,3 +68,25 @@ class UserLogin(generics.CreateAPIView):
         if not user:
             return Response({'message': 'INVALID_VALUE'}, status=status.HTTP_401_UNAUTHORIZED)
         return Response({'token': user['token']}, status=status.HTTP_200_OK)
+
+
+@permission_classes([IsAuthenticated])
+class UserInfo(generics.GenericAPIView):
+    serial = UserSerializer
+
+    def get(self, request):
+        return Response({'info': UserSerializer(request.user, context=self.get_serializer_context()).data}, status=status.HTTP_200_OK)
+
+    def patch(self, request):
+        password_validator = RegexValidator(
+            regex="^[A-Za-z0-9!@#$%^&+=]{8,100}$")
+        try:
+            password_validator(request.data['password'])
+        except ValidationError:
+            return Response({'message': 'INVALID_PASSWORD'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        except KeyError:
+            return Response({'message': 'INVALID_VALUE'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        user = request.user
+        user.set_password(request.data['password'])
+        user.save()
+        return Response({'message': 'SUCCESS'}, status=status.HTTP_200_OK)
